@@ -17,9 +17,6 @@ module vending_machine (
 	return_temp,
 );
 
-
-hello my nmame
-
 	// Ports Declaration
 	// Do not modify the module interface
 	input clk;
@@ -73,7 +70,7 @@ hello my nmame
 	// NOTE: integer will never be used other than special usages.
 	// Only used for loop iteration.
 	// You may add more integer variables for loop iteration.
-	integer i, j, k,l,m,n;
+	integer i, j, k,l,m,n,p;
 
 	// Internal states. You may add your own net & reg variables.
 	reg [`kTotalBits-1:0] current_total;
@@ -87,14 +84,7 @@ hello my nmame
 
 	// Variables. You may add more your own registers.
 	reg [`kTotalBits-1:0] input_total, output_total, return_total_0,return_total_1,return_total_2;
-	
-	//////////////////////////////////////////////////////
-	reg [`kCoinBits] return_coins[`kNumCoins -1:0]; 
-	assign return_coins[0] = return_total_0;
-	assign return_coins[1] = return_total_1;
-	assign return_coins[2] = return_total_2;
-	//////////////////////////////////////////////////////
-	
+	//return_total_n would be next state of returning_coin_n
 	/*
 	`define kTotalBits 31
 	`define kItemBits 8
@@ -110,8 +100,6 @@ hello my nmame
 	always @(*) begin
 		// TODO: current_total_nxt
 		// You don't have to worry about concurrent activations in each input vector (or array).
-		
-		
 		//check weather there are input coins
 		for(i = 0;i<`kNumCoins;i++) begin
 			// if there is input coin, increase, total input, number of coins
@@ -128,7 +116,9 @@ hello my nmame
 			if(i_select_item[i] ==1) begin
 				output_total = output_total + kkItemPrice[i];
 				num_items_nxt[i] = num_items[i] -1;
-				current_total_nxt = current_total_nxt - output_total;
+				if(current_total > output_total) begin
+					current_total_nxt = current_total_nxt - output_total;
+				end
 			end
 		end
 
@@ -144,13 +134,36 @@ hello my nmame
 			return_total_2 = temp/`kkCoinValue[0];
 			// let return_total_n is next state
 		end
-		for(l = 0;l < `kNumCoins ; l++) begin
-			if(return_coins[l] > 0)begin
-				o_return_coin[l] = 1;
-				return_coins[l] -1;
-			end
+		if(returning_total_0 > 0) begin
+			return_total_0 = returning_coin_0 -1;
+			return_temp = return_temp + `kkCoinValue[0];
+			current_total_nxt = current_total_nxt - return_temp;
+			num_coins_nxt[0] = num_coins[0]-1;
+			o_return_coin[0] = 1'b1;
 		end
-
+		else begin
+			o_return_coin[0] = 1'b0;
+		end
+		if(return_total_1 >0) begin
+			return_total_1 = returning_coin_1 -1;
+			return_temp = return_temp + `kkCoinValue[1];
+			num_coins_nxt[1] = num_coins[1]-1;
+			current_total_nxt = current_total_nxt - return_temp;
+			o_return_coin[1] = 1'b1;
+		end
+		else begin
+			o_return_coin[1] = 1'b0;
+		end
+		if(return_total_2 >0) begin
+			return_total_2 = returning_coin_2 -1;
+			return_temp = return_temp + `kkCoinValue[2];
+			num_coins_nxt[2] = num_coins[2]-1;
+			current_total_nxt = current_total_nxt - return_temp;
+			o_return_coin[2] = 1'b1;
+		end
+		else begin
+			o_return_coin[2] = 1'b0;
+		end
 		// Calculate the next current_total state. current_total_nxt =
 
 
@@ -160,11 +173,25 @@ hello my nmame
 	// Combinational logic for the outputs
 	always @(*) begin
 	// TODO: o_available_item
-
-
-
+		for(n = 0; n<`kNumItems; n++) begin
+			if(num_items[n]>0)	begin
+				if(current_total >= kkItemPrice[n]) begin
+					o_available_item[n] = 1'b1;
+				end 
+				else o_available_item[n]=1'b0;
+			end
+			else o_available_item[n]=1'b0;
+		end
 	// TODO: o_output_item
-
+		for(p = 0; p<kNumItems;p++) begin
+			if(i_select_item[p]) begin
+				if (o_available_item[p]) begin
+					o_output_items[p] = 1'b1;
+				end
+				else o_output_items[p] = 1'b0;
+			end
+			else o_output_items[p] = 1'b0;
+		end
 
 	end
 
@@ -172,7 +199,7 @@ hello my nmame
 	always @(posedge clk) begin
 		if (!reset_n) begin
 			// TODO: reset all states.
-
+			
 
 
 		end
