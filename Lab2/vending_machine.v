@@ -17,6 +17,9 @@ module vending_machine (
 	return_temp,
 );
 
+
+hello my nmame
+
 	// Ports Declaration
 	// Do not modify the module interface
 	input clk;
