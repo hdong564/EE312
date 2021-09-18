@@ -209,7 +209,7 @@ module vending_machine (
 /////////////////////////////////////////////////////////////////////////
 
 			// decreas stopwatch
-
+			stopwatch = stopwatch -1;
 
 
 
